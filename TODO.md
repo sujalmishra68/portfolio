@@ -22,12 +22,12 @@
 - Add success/error states & UI
 - Form ref integration
 
-## [ ] 4. Testing
+## [x] 4. Testing ✅
 
 - Test submission flow
 - Verify loading/success/error states
 
-## [ ] 5. Finalize
+## [x] 5. Finalize ✅
 
 - Clean up TODO.md
-- Attempt completion
+- Task complete
