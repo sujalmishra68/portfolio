@@ -1,132 +1,230 @@
-import { motion } from "framer-motion";
-import { Github, Linkedin, Mail, Copyright } from "lucide-react";
-import { cn } from "../utils.js";
+import { useLayoutEffect, useRef } from "react";
+import gsap from "gsap";
+import { ArrowUpRight, Github, Linkedin, Mail } from "lucide-react";
 
 const Footer = () => {
+  const footerRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const footer = footerRef.current;
+
+    if (!footer) return;
+
+    const ctx = gsap.context(() => {
+      const reducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+
+      if (reducedMotion) {
+        gsap.set("[data-footer]", {
+          opacity: 1,
+          y: 0,
+        });
+
+        return;
+      }
+
+      gsap.fromTo(
+        "[data-footer]",
+        {
+          opacity: 0,
+          y: 25,
+        },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.7,
+          stagger: 0.08,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: footer,
+            start: "top 90%",
+            once: true,
+          },
+        }
+      );
+    }, footer);
+
+    return () => ctx.revert();
+  }, []);
+
+  const scrollTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
   return (
-    <footer className="pt-24 pb-12 border-t bg-gradient-to-t from-black to-slate-900/50 border-white/10">
-      <div className="container max-w-6xl px-4 mx-auto">
-        {/* Main Footer */}
-        <div className="grid gap-12 mb-16 md:grid-cols-3 lg:gap-16">
-          {/* Logo & Description */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="p-8 shadow-2xl glass rounded-3xl shadow-black/20"
+    <footer
+      ref={footerRef}
+      className="footer-editorial"
+    >
+      <div className="footer-container">
+
+        {/* ==================================================
+            MAIN FOOTER
+        ================================================== */}
+
+        <div className="footer-main">
+
+          {/* BRAND */}
+          <div
+            data-footer
+            className="footer-brand"
           >
-            <div className="mb-6 text-3xl font-black text-transparent bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text">
-              Sujal Mishra
+            <div className="footer-brand-label">
+              JAVA BACKEND / FULL STACK DEVELOPER
             </div>
-            <p className="mb-6 leading-relaxed text-white/70">
-              Java  & Full Stack Developer crafting exceptional digital
-              experiences.
+
+            <h2 className="footer-name">
+              SUJAL
+              <br />
+              <span>MISHRA.</span>
+            </h2>
+
+            <p className="footer-description">
+              Building practical software with Java,
+              Spring Boot and modern web technologies.
             </p>
-            <div className="flex gap-4">
-              <motion.a
+          </div>
+
+          {/* NAVIGATION */}
+          <nav
+            data-footer
+            className="footer-navigation"
+            aria-label="Footer navigation"
+          >
+            <span className="footer-column-label">
+              EXPLORE
+            </span>
+
+            <div className="footer-links">
+
+              <a href="#hero">
+                <span>HOME</span>
+                <ArrowUpRight size={14} />
+              </a>
+
+              <a href="#about">
+                <span>ABOUT</span>
+                <ArrowUpRight size={14} />
+              </a>
+
+              <a href="#projects">
+                <span>PROJECTS</span>
+                <ArrowUpRight size={14} />
+              </a>
+
+              <a href="#experience">
+                <span>EXPERIENCE</span>
+                <ArrowUpRight size={14} />
+              </a>
+
+              <a href="#skills">
+                <span>SKILLS</span>
+                <ArrowUpRight size={14} />
+              </a>
+
+              <a href="#contact">
+                <span>CONTACT</span>
+                <ArrowUpRight size={14} />
+              </a>
+
+            </div>
+          </nav>
+
+          {/* SOCIAL */}
+          <div
+            data-footer
+            className="footer-social"
+          >
+            <span className="footer-column-label">
+              CONNECT
+            </span>
+
+            <div className="footer-social-links">
+
+              <a
                 href="https://github.com/sujalmishra68"
                 target="_blank"
-                whileHover={{ scale: 1.1 }}
-                className="p-3 transition-all border rounded-xl bg-gradient-to-r from-purple-500/20 border-purple-500/30 hover:bg-purple-500/30"
+                rel="noopener noreferrer"
               >
-                <Github size={20} />
-              </motion.a>
-              <motion.a
+                <Github size={17} strokeWidth={1.5} />
+                <span>GITHUB</span>
+                <ArrowUpRight size={13} />
+              </a>
+
+              <a
                 href="https://www.linkedin.com/in/sujalkumarmishra/"
                 target="_blank"
-                whileHover={{ scale: 1.1 }}
-                className="p-3 transition-all border rounded-xl bg-gradient-to-r from-blue-500/20 border-blue-500/30 hover:bg-blue-500/30"
+                rel="noopener noreferrer"
               >
-                <Linkedin size={20} />
-              </motion.a>
-              <motion.a
+                <Linkedin size={17} strokeWidth={1.5} />
+                <span>LINKEDIN</span>
+                <ArrowUpRight size={13} />
+              </a>
+
+              <a
                 href="mailto:sujalmishra68@gmail.com"
-                whileHover={{ scale: 1.1 }}
-                className="p-3 transition-all border rounded-xl bg-gradient-to-r from-emerald-500/20 border-emerald-500/30 hover:bg-emerald-500/30"
               >
-                <Mail size={20} />
-              </motion.a>
-            </div>
-          </motion.div>
+                <Mail size={17} strokeWidth={1.5} />
+                <span>EMAIL</span>
+                <ArrowUpRight size={13} />
+              </a>
 
-          {/* Quick Links */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="space-y-6"
-          >
-            <h4 className="mb-6 text-2xl font-bold text-white">Quick Links</h4>
-            <div className="space-y-4">
-              {[
-                { name: "Home", href: "#hero" },
-                { name: "Projects", href: "#projects" },
-                { name: "Skills", href: "#skills" },
-                { name: "Contact", href: "#contact" },
-              ].map((link, index) => (
-                <motion.a
-                  key={link.name}
-                  href={link.href}
-                  initial={{ opacity: 0, x: 20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  whileHover={{ x: 10 }}
-                  className="block text-lg font-medium transition-all duration-300 text-white/80 hover:text-white hover:pl-4"
-                >
-                  {link.name}
-                </motion.a>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Contact Info */}
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="p-8 space-y-6 shadow-2xl glass rounded-3xl shadow-black/20"
-          >
-            <h4 className="mb-6 text-2xl font-bold text-white">Contact Info</h4>
-            <div className="space-y-4">
-              <p className="text-white/80">
-                📧{" "}
-                <a
-                  href="mailto:sujalmishra68@gmail.com"
-                  className="font-semibold transition-colors hover:text-purple-400"
-                >
-                  sujalmishra68@gmail.com
-                </a>
-              </p>
-              <p className="text-white/80">
-                📱{" "}
-                <a
-                  href="tel:+916205302730"
-                  className="font-semibold transition-colors hover:text-emerald-400"
-                >
-                  +91 6205302730
-                </a>
-              </p>
-              <p className="text-white/80">📍 Jaipur, Rajasthan, India</p>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Bottom Bar */}
-        <div className="p-6 mt-16 border glass rounded-2xl border-white/10">
-          <div className="flex flex-col items-center justify-between gap-4 text-center md:flex-row md:text-left">
-            <div className="flex items-center gap-3">
-              <Copyright size={20} className="text-white/60" />
-              <span className="text-white/70">
-                2025 © Sujal Kumar Mishra.
-              </span>
-            </div>
-            <div className="flex gap-2 text-sm text-white/60">
-              <span>Designed with</span>
-              <span className="text-red-400">❤️</span>
-              <span>in Jaipur</span>
             </div>
           </div>
+
         </div>
+
+        {/* ==================================================
+            LARGE CTA
+        ================================================== */}
+
+        <div
+          data-footer
+          className="footer-cta"
+        >
+          <span>HAVE A PROJECT?</span>
+
+          <a href="#contact">
+            LET&apos;S TALK
+            <ArrowUpRight
+              size={22}
+              strokeWidth={1.3}
+            />
+          </a>
+        </div>
+
+        {/* ==================================================
+            BOTTOM BAR
+        ================================================== */}
+
+        <div className="footer-bottom">
+
+          <span>
+            © {new Date().getFullYear()} SUJAL KUMAR MISHRA
+          </span>
+
+          <button
+            type="button"
+            onClick={scrollTop}
+            className="footer-top-button"
+          >
+            BACK TO TOP
+            <ArrowUpRight
+              size={14}
+              strokeWidth={1.4}
+            />
+          </button>
+
+          <span>
+            JAIPUR, INDIA
+          </span>
+
+        </div>
+
       </div>
     </footer>
   );

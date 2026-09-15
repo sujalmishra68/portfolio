@@ -1,138 +1,192 @@
-import { motion } from "framer-motion";
-import {
-  Code,
-  Database,
-  GitBranch,
-  Cloud,
-  GraduationCap,
-  Users,
-} from "lucide-react";
-import { cn } from "../utils.js";
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+/* ─────────────────────────────────────────────────────────────
+   ABOUT  ·  Sujal Kumar Mishra
+   Uses GSAP + ScrollTrigger for scroll-triggered reveals.
+   Section ID "about" preserved — Navbar.jsx targets it.
+   All content sourced directly from the existing portfolio.
+───────────────────────────────────────────────────────────── */
+
+gsap.registerPlugin(ScrollTrigger);
+
+/* Metadata sourced exclusively from existing portfolio content */
+const META = [
+  { label: "Location",  value: "Jaipur, Rajasthan" },
+  { label: "Focus",     value: "Java / Full Stack"  },
+  { label: "Education", value: "B.Tech — CSE"       },
+  { label: "Status",    value: "Available"          },
+];
+
+/* Primary technologies — from existing About.jsx + Skills.jsx */
+const STACK = [
+  "Java", "Spring Boot", "REST APIs",
+  "React", "JavaScript", "Node.js",
+  "MySQL", "PostgreSQL", "Git",
+];
 
 const About = () => {
-  const skills = [
-    { name: "Java", level: 90, icon: Code, color: "text-orange-400" },
-    { name: "React.js", level: 85, icon: Code, color: "text-cyan-400" },
-    { name: "Spring Boot", level: 80, icon: Code, color: "text-green-400" },
-    { name: "MySQL", level: 85, icon: Database, color: "text-blue-400" },
-    { name: "MongoDB", level: 75, icon: Database, color: "text-emerald-400" },
-    { name: "Git/GitHub", level: 90, icon: GitBranch, color: "text-gray-400" },
-    { name: "AWS Basics", level: 60, icon: Cloud, color: "text-yellow-400" },
-    { name: "Node.js", level: 70, icon: Code, color: "text-green-300" },
-  ];
+  const sectionRef = useRef(null);
 
-  const stats = [
-    { label: "Projects", value: "6+" },
-    { label: "Technologies", value: "15+" },
-    { label: "CGPA", value: "8.14" },
-    { label: "Hackathons", value: "2+" },
-  ];
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      /* Honour prefers-reduced-motion */
+      const reduced = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+
+      if (reduced) {
+        gsap.set("[data-about]", { opacity: 1, y: 0, x: 0 });
+        return;
+      }
+
+      /* Common ScrollTrigger config */
+      const st = {
+        trigger:     sectionRef.current,
+        start:       "top 78%",
+        toggleActions: "play none none none",
+      };
+
+      /* 1 — Section number / label */
+      gsap.fromTo(
+        "[data-about='label']",
+        { opacity: 0, x: -20 },
+        { opacity: 1, x: 0, duration: 0.7, ease: "power3.out", scrollTrigger: st }
+      );
+
+      /* 2 — Large section heading */
+      gsap.fromTo(
+        "[data-about='heading']",
+        { opacity: 0, y: 32 },
+        { opacity: 1, y: 0, duration: 0.9, ease: "power3.out",
+          scrollTrigger: { ...st, start: "top 76%" } }
+      );
+
+      /* 3 — Divider line grows */
+      gsap.fromTo(
+        "[data-about='rule']",
+        { scaleX: 0, transformOrigin: "left" },
+        { scaleX: 1, duration: 0.8, ease: "power3.out",
+          scrollTrigger: { ...st, start: "top 74%" } }
+      );
+
+      /* 4 — Main statement */
+      gsap.fromTo(
+        "[data-about='statement']",
+        { opacity: 0, y: 24 },
+        { opacity: 1, y: 0, duration: 0.85, ease: "power3.out",
+          scrollTrigger: { ...st, start: "top 72%" } }
+      );
+
+      /* 5 — Supporting paragraph */
+      gsap.fromTo(
+        "[data-about='body']",
+        { opacity: 0, y: 18 },
+        { opacity: 1, y: 0, duration: 0.75, ease: "power3.out",
+          scrollTrigger: { ...st, start: "top 68%" } }
+      );
+
+      /* 6 — Stack tags */
+      gsap.fromTo(
+        "[data-about='stack']",
+        { opacity: 0, y: 14 },
+        { opacity: 1, y: 0, duration: 0.6, ease: "power3.out",
+          scrollTrigger: { ...st, start: "top 64%" } }
+      );
+
+      /* 7 — Metadata strip */
+      gsap.fromTo(
+        "[data-about='meta']",
+        { opacity: 0, y: 14 },
+        { opacity: 1, y: 0, duration: 0.6, ease: "power3.out",
+          scrollTrigger: { ...st, start: "top 60%" } }
+      );
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
 
   return (
     <section
       id="about"
-      className="py-32 bg-gradient-to-b from-slate-900/50 to-transparent"
+      ref={sectionRef}
+      className="about-section"
+      aria-labelledby="about-heading"
     >
-      <div className="container mx-auto px-4 max-w-7xl">
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-24"
-        >
-          <h2 className="text-5xl md:text-6xl lg:text-7xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-purple-500 bg-clip-text text-transparent mb-6">
-            About Me
-          </h2>
-          <div className="w-32 h-1 bg-gradient-to-r from-purple-400 to-pink-400 mx-auto rounded-full"></div>
-        </motion.div>
+      {/* ── Top rule ──────────────────────────────────────── */}
+      <div className="about-top-rule" data-about="rule" aria-hidden="true" />
 
-        {/* Intro */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="max-w-4xl mx-auto text-center mb-24"
-        >
-          <div className="glass p-12 rounded-3xl mb-16 shadow-2xl shadow-purple-500/10">
-            <p className="text-xl md:text-2xl text-white/80 leading-relaxed max-w-3xl mx-auto mb-8">
-              Motivated{" "}
-              <span className="gradient-text font-semibold">
-                Java and Full Stack Developer
-              </span>{" "}
-              with hands-on experience in building responsive web applications
-              and backend services using{" "}
-              <span className="font-semibold">Java, React.js, Node.js</span>.
-              Currently undergoing cloud reliability training through{" "}
-              <span className="font-semibold text-yellow-400">
-                Infosys Springboard internship
-              </span>
-              .
+      <div className="about-container">
+
+        {/* ── Column A — Section label ───────────────────── */}
+        <aside className="about-label-col" data-about="label" aria-hidden="true">
+          <span className="about-number">01</span>
+          <span className="about-label-text">About Me</span>
+        </aside>
+
+        {/* ── Column B — Content ────────────────────────── */}
+        <div className="about-content-col">
+
+          {/* Large section heading */}
+          <h2
+            id="about-heading"
+            className="about-heading"
+            data-about="heading"
+          >
+            ABOUT
+          </h2>
+
+          {/* ── Main two-column prose block ─────────────── */}
+          <div className="about-prose-grid">
+
+            {/* Main statement — large */}
+            <p className="about-statement" data-about="statement">
+              I build reliable backend systems and full-stack web
+              applications — primarily with Java, Spring Boot, and React.
             </p>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
-              {stats.map((stat, index) => (
-                <motion.div
-                  key={stat.label}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  className="p-6 glass rounded-2xl hover:bg-white/10 transition-all"
-                >
-                  <h3 className="text-3xl font-black gradient-text mb-2">
-                    {stat.value}
-                  </h3>
-                  <p className="text-white/70 text-sm uppercase tracking-wider">
-                    {stat.label}
-                  </p>
-                </motion.div>
-              ))}
+
+            {/* Supporting detail — smaller */}
+            <div className="about-body-col">
+              <p className="about-body" data-about="body">
+                Currently a Computer Science undergraduate at Arya College of
+                Engineering &amp; IT, Jaipur (2023–2027, CGPA 8.14). I have
+                hands-on experience designing REST APIs, working with relational
+                databases, and building responsive front-ends with React and
+                Tailwind CSS. Beyond coursework, I am deepening my cloud
+                knowledge through an Infosys Springboard cloud reliability
+                internship and have competed in events including the SKIT
+                Hackathon 2025 and EXERGIE'24 Blind Coding Contest.
+              </p>
+
+              {/* Technology stack */}
+              <div className="about-stack" data-about="stack" aria-label="Core technologies">
+                <p className="about-stack-label">CORE STACK</p>
+                <ul className="about-stack-list" role="list">
+                  {STACK.map((tech) => (
+                    <li key={tech} className="about-stack-item">
+                      {tech}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
-        </motion.div>
 
-        {/* Skills Grid */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="grid md:grid-cols-2 lg:grid-cols-4 gap-8"
-        >
-          {skills.map((skill, index) => {
-            const Icon = skill.icon;
-            return (
-              <motion.div
-                key={skill.name}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.05 }}
-                className="glass p-8 rounded-3xl text-center hover:bg-white/10 hover:scale-105 transition-all group shadow-xl shadow-black/20"
-              >
-                <div
-                  className={`w-16 h-16 ${skill.color} bg-gradient-to-br from-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:rotate-12 transition-all duration-500`}
-                >
-                  <Icon size={28} />
-                </div>
-                <h4 className="text-xl font-bold text-white mb-4">
-                  {skill.name}
-                </h4>
-                <div className="w-full bg-white/10 rounded-full h-3">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    whileInView={{ width: `${skill.level}%` }}
-                    viewport={{ once: true }}
-                    className={`h-3 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full shadow-lg`}
-                  />
-                </div>
-                <p className="text-white/60 mt-2 font-mono text-sm">
-                  {skill.level}%
-                </p>
-              </motion.div>
-            );
-          })}
-        </motion.div>
+          {/* ── Horizontal rule ─────────────────────────── */}
+          <div className="about-mid-rule" aria-hidden="true" />
+
+          {/* ── Metadata strip ──────────────────────────── */}
+          <dl className="about-meta" data-about="meta">
+            {META.map(({ label, value }) => (
+              <div key={label} className="about-meta-item">
+                <dt className="about-meta-label">{label}</dt>
+                <dd className="about-meta-value">{value}</dd>
+              </div>
+            ))}
+          </dl>
+
+        </div>
       </div>
     </section>
   );

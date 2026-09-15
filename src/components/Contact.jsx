@@ -1,51 +1,228 @@
-import { motion } from "framer-motion";
-// import emailjs from "@emailjs/browser";
+import { useLayoutEffect, useRef, useState } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import {
   Mail,
   Phone,
+  MapPin,
   Github,
   Linkedin,
-  MapPin,
   Send,
+  ArrowUpRight,
   CheckCircle,
   XCircle,
 } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
 import emailjs from "@emailjs/browser";
-import { cn } from "../utils.js";
+
+gsap.registerPlugin(ScrollTrigger);
+
+const CONTACT_INFO = [
+  {
+    icon: Mail,
+    label: "EMAIL",
+    value: "sujalmishra68@gmail.com",
+    link: "mailto:sujalmishra68@gmail.com",
+  },
+  {
+    icon: Phone,
+    label: "PHONE",
+    value: "+91 6205302730",
+    link: "tel:+916205302730",
+  },
+  {
+    icon: MapPin,
+    label: "LOCATION",
+    value: "Jaipur, Rajasthan, India",
+  },
+];
 
 const Contact = () => {
+  const sectionRef = useRef(null);
+  const formRef = useRef(null);
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     message: "",
   });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState("idle");
   const [errorMsg, setErrorMsg] = useState("");
-  const formRef = useRef(null);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  /* ============================================================
+     EMAILJS
+     ============================================================ */
+
+  useLayoutEffect(() => {
+    const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+    if (publicKey) {
+      emailjs.init(publicKey);
+    }
+  }, []);
+
+  /* ============================================================
+     GSAP REVEAL
+     ============================================================ */
+
+  useLayoutEffect(() => {
+    const section = sectionRef.current;
+
+    if (!section) return;
+
+    const ctx = gsap.context(() => {
+      const reducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+
+      if (reducedMotion) {
+        gsap.set(
+          [
+            "[data-contact-label]",
+            "[data-contact-heading]",
+            "[data-contact-copy]",
+            "[data-contact-info]",
+            "[data-contact-form]",
+          ],
+          {
+            opacity: 1,
+            x: 0,
+            y: 0,
+          }
+        );
+
+        return;
+      }
+
+      gsap.fromTo(
+        "[data-contact-label]",
+        {
+          opacity: 0,
+          x: -20,
+        },
+        {
+          opacity: 1,
+          x: 0,
+          duration: 0.65,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: section,
+            start: "top 82%",
+            once: true,
+          },
+        }
+      );
+
+      gsap.fromTo(
+        "[data-contact-heading]",
+        {
+          opacity: 0,
+          y: 35,
+        },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.9,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: section,
+            start: "top 78%",
+            once: true,
+          },
+        }
+      );
+
+      gsap.fromTo(
+        "[data-contact-copy]",
+        {
+          opacity: 0,
+          y: 20,
+        },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.65,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: section,
+            start: "top 74%",
+            once: true,
+          },
+        }
+      );
+
+      gsap.fromTo(
+        "[data-contact-info]",
+        {
+          opacity: 0,
+          x: -20,
+        },
+        {
+          opacity: 1,
+          x: 0,
+          duration: 0.55,
+          stagger: 0.08,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: "[data-contact-details]",
+            start: "top 82%",
+            once: true,
+          },
+        }
+      );
+
+      gsap.fromTo(
+        "[data-contact-form]",
+        {
+          opacity: 0,
+          x: 25,
+        },
+        {
+          opacity: 1,
+          x: 0,
+          duration: 0.7,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: "[data-contact-form]",
+            start: "top 82%",
+            once: true,
+          },
+        }
+      );
+    }, section);
+
+    return () => ctx.revert();
+  }, []);
+
+  /* ============================================================
+     FORM
+     ============================================================ */
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+
+    setFormData((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
+
+    if (status === "error") {
+      setStatus("idle");
+      setErrorMsg("");
+    }
   };
 
-  // ✅ FIXED FUNCTION
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
     if (!formRef.current) return;
 
     setIsSubmitting(true);
-    setStatus("idle");
+    setStatus("sending");
     setErrorMsg("");
 
     try {
-      setStatus("sending");
-
-      console.log("SERVICE:", import.meta.env.VITE_EMAILJS_SERVICE_ID);
-      console.log("TEMPLATE:", import.meta.env.VITE_EMAILJS_TEMPLATE_ID);
-      console.log("PUBLIC:", import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
-
       await emailjs.sendForm(
         import.meta.env.VITE_EMAILJS_SERVICE_ID,
         import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
@@ -61,142 +238,360 @@ const Contact = () => {
         message: "",
       });
 
-      setTimeout(() => setStatus("idle"), 3000);
-
+      setTimeout(() => {
+        setStatus("idle");
+      }, 4000);
     } catch (error) {
-      console.error("FULL ERROR:", error);
+      console.error("EmailJS error:", error);
+
       setStatus("error");
-      setErrorMsg(error?.text || "Failed to send message");
+
+      setErrorMsg(
+        error?.text ||
+          "Failed to send message. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  useEffect(() => {
-    if (import.meta.env.VITE_EMAILJS_PUBLIC_KEY) {
-      emailjs.init(import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
-    }
-  }, []);
-
-  const contactInfo = [
-    {
-      icon: Mail,
-      label: "Email",
-      value: "sujalmishra68@gmail.com",
-      link: "mailto:sujalmishra68@gmail.com",
-    },
-    {
-      icon: Phone,
-      label: "Phone",
-      value: "+91 6205302730",
-      link: "tel:+916205302730",
-    },
-    {
-      icon: MapPin,
-      label: "Location",
-      value: "Jaipur, Rajasthan, India",
-    },
-  ];
+  /* ============================================================
+     RENDER
+     ============================================================ */
 
   return (
     <section
       id="contact"
-      className="relative py-32 overflow-hidden bg-gradient-to-b from-black via-slate-900/50 to-transparent"
+      ref={sectionRef}
+      className="contact-editorial"
+      aria-labelledby="contact-heading"
     >
-      <div className="absolute rounded-full top-20 right-20 w-72 h-72 bg-purple-500/5 blur-3xl"></div>
-      <div className="absolute rounded-full bottom-20 left-20 w-96 h-96 bg-pink-500/5 blur-3xl"></div>
+      <div className="contact-container">
 
-      <div className="container relative z-10 max-w-6xl px-4 mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mb-24 text-center"
-        >
-          <h2 className="mb-6 text-5xl font-black text-transparent md:text-6xl lg:text-7xl bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text">
-            Get In Touch
-          </h2>
-          <div className="w-40 h-1 mx-auto rounded-full shadow-lg bg-gradient-to-r from-pink-400 to-blue-400"></div>
-        </motion.div>
+        {/* ======================================================
+            TOP
+        ====================================================== */}
 
-        <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-24">
+        <div className="contact-top">
 
-          {/* LEFT SIDE SAME */}
-          <motion.div className="space-y-8">
-            <div className="p-10 shadow-2xl glass rounded-3xl shadow-black/20">
-              <h3 className="mb-8 text-3xl font-bold text-white">
-                Let's Connect!
-              </h3>
-              <div className="space-y-6">
-                {contactInfo.map((info, index) => {
-                  const Icon = info.icon;
-                  return (
-                    <motion.div key={info.label}
-                      className="flex items-center gap-4 p-6 glass rounded-2xl">
-                      <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500">
-                        <Icon size={24} className="text-white" />
-                      </div>
-                      <div>
-                        <p className="text-white">{info.label}</p>
-                        <a href={info.link} className="text-white">
-                          {info.value}
-                        </a>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </div>
-          </motion.div>
+          <div
+            data-contact-label
+            className="contact-label"
+          >
+            <span>05</span>
+            <span>/</span>
+            <span>GET IN TOUCH</span>
+          </div>
 
-          {/* RIGHT SIDE FORM SAME */}
-          <motion.div className="p-10 shadow-2xl glass rounded-3xl shadow-black/20">
-            <h3 className="mb-8 text-3xl font-bold text-center text-white">
-              Send a Message
-            </h3>
-
-            <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
-
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Your name"
-                required
-                className="w-full p-4 text-white rounded-xl bg-black/40"
-              />
-
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Your email"
-                required
-                className="w-full p-4 text-white rounded-xl bg-black/40"
-              />
-
-              <textarea
-                name="message"
-                value={formData.message}
-                onChange={handleChange}
-                placeholder="Message"
-                required
-                className="w-full p-4 text-white rounded-xl bg-black/40"
-              />
-
-              <button type="submit" className="w-full py-4 bg-purple-500 rounded-xl">
-                {status === "sending" ? "Sending..." : "Send Message"}
-              </button>
-
-              {status === "success" && <p className="text-green-400">Sent ✅</p>}
-              {status === "error" && <p className="text-red-400">{errorMsg}</p>}
-
-            </form>
-          </motion.div>
+          <div className="contact-top-line" />
 
         </div>
+
+        {/* ======================================================
+            HEADING
+        ====================================================== */}
+
+        <div className="contact-heading-row">
+
+          <h2
+            id="contact-heading"
+            data-contact-heading
+            className="contact-heading"
+          >
+            LET&apos;S
+            <br />
+            <span>TALK.</span>
+          </h2>
+
+          <p
+            data-contact-copy
+            className="contact-copy"
+          >
+            Have a project, internship opportunity, or
+            something interesting to build together?
+            Send me a message and let&apos;s start a
+            conversation.
+          </p>
+
+        </div>
+
+        {/* ======================================================
+            MAIN CONTENT
+        ====================================================== */}
+
+        <div className="contact-main">
+
+          {/* LEFT */}
+          <div
+            data-contact-details
+            className="contact-details"
+          >
+
+            <div className="contact-details-heading">
+              CONTACT DETAILS
+            </div>
+
+            <div className="contact-details-list">
+
+              {CONTACT_INFO.map((info) => {
+                const Icon = info.icon;
+
+                return (
+                  <div
+                    key={info.label}
+                    data-contact-info
+                    className="contact-detail"
+                  >
+                    <div className="contact-detail-icon">
+                      <Icon
+                        size={17}
+                        strokeWidth={1.4}
+                      />
+                    </div>
+
+                    <div className="contact-detail-content">
+                      <span className="contact-detail-label">
+                        {info.label}
+                      </span>
+
+                      {info.link ? (
+                        <a
+                          href={info.link}
+                          className="contact-detail-value"
+                        >
+                          {info.value}
+                        </a>
+                      ) : (
+                        <span className="contact-detail-value">
+                          {info.value}
+                        </span>
+                      )}
+                    </div>
+
+                    {info.link && (
+                      <ArrowUpRight
+                        size={17}
+                        strokeWidth={1.4}
+                        className="contact-detail-arrow"
+                      />
+                    )}
+                  </div>
+                );
+              })}
+
+            </div>
+
+            {/* Social */}
+            <div className="contact-social-section">
+
+              <span className="contact-social-label">
+                ELSEWHERE
+              </span>
+
+              <div className="contact-socials">
+
+                <a
+                  href="https://github.com/sujalmishra68"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="GitHub"
+                  className="contact-social-link"
+                >
+                  <Github
+                    size={18}
+                    strokeWidth={1.5}
+                  />
+
+                  <span>GITHUB</span>
+
+                  <ArrowUpRight
+                    size={14}
+                    strokeWidth={1.4}
+                  />
+                </a>
+
+                <a
+                  href="https://www.linkedin.com/in/sujalkumarmishra/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="LinkedIn"
+                  className="contact-social-link"
+                >
+                  <Linkedin
+                    size={18}
+                    strokeWidth={1.5}
+                  />
+
+                  <span>LINKEDIN</span>
+
+                  <ArrowUpRight
+                    size={14}
+                    strokeWidth={1.4}
+                  />
+                </a>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* RIGHT — FORM */}
+          <div
+            data-contact-form
+            className="contact-form-area"
+          >
+
+            <div className="contact-form-title">
+              SEND A MESSAGE
+            </div>
+
+            <form
+              ref={formRef}
+              onSubmit={handleSubmit}
+              className="contact-form"
+            >
+
+              {/* NAME */}
+              <div className="contact-field">
+
+                <label htmlFor="contact-name">
+                  01 — NAME
+                </label>
+
+                <input
+                  id="contact-name"
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Your name"
+                  autoComplete="name"
+                  required
+                  disabled={isSubmitting}
+                />
+
+              </div>
+
+              {/* EMAIL */}
+              <div className="contact-field">
+
+                <label htmlFor="contact-email">
+                  02 — EMAIL
+                </label>
+
+                <input
+                  id="contact-email"
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="your@email.com"
+                  autoComplete="email"
+                  required
+                  disabled={isSubmitting}
+                />
+
+              </div>
+
+              {/* MESSAGE */}
+              <div className="contact-field">
+
+                <label htmlFor="contact-message">
+                  03 — MESSAGE
+                </label>
+
+                <textarea
+                  id="contact-message"
+                  name="message"
+                  value={formData.message}
+                  onChange={handleChange}
+                  placeholder="Tell me about your project..."
+                  rows={5}
+                  required
+                  disabled={isSubmitting}
+                />
+
+              </div>
+
+              {/* BUTTON */}
+              <button
+                type="submit"
+                className="contact-submit"
+                disabled={isSubmitting}
+              >
+                <span>
+                  {status === "sending"
+                    ? "SENDING..."
+                    : "SEND MESSAGE"}
+                </span>
+
+                <Send
+                  size={17}
+                  strokeWidth={1.4}
+                />
+              </button>
+
+              {/* SUCCESS */}
+              {status === "success" && (
+                <div
+                  className="contact-message contact-success"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <CheckCircle
+                    size={17}
+                    strokeWidth={1.5}
+                  />
+
+                  <span>
+                    Message sent successfully.
+                    I&apos;ll get back to you soon.
+                  </span>
+                </div>
+              )}
+
+              {/* ERROR */}
+              {status === "error" && (
+                <div
+                  className="contact-message contact-error"
+                  role="alert"
+                >
+                  <XCircle
+                    size={17}
+                    strokeWidth={1.5}
+                  />
+
+                  <span>{errorMsg}</span>
+                </div>
+              )}
+
+            </form>
+
+          </div>
+
+        </div>
+
+        {/* ======================================================
+            FOOTER STRIP
+        ====================================================== */}
+
+        <div className="contact-footer">
+
+          <span>
+            SUJAL KUMAR MISHRA
+          </span>
+
+          <span>
+            JAVA BACKEND / FULL STACK DEVELOPER
+          </span>
+
+          <span>
+            © {new Date().getFullYear()}
+          </span>
+
+        </div>
+
       </div>
     </section>
   );

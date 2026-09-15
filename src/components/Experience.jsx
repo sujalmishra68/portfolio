@@ -1,138 +1,330 @@
-import { motion } from "framer-motion";
-import { Briefcase, GraduationCap, Award, Clock, MapPin } from "lucide-react";
+import { useLayoutEffect, useRef, useState } from "react";
+import gsap from "gsap";
+import { ChevronDown, Briefcase, GraduationCap } from "lucide-react";
+
 import { cn } from "../utils.js";
 
-const experiences = [
+const EXPERIENCES = [
   {
-    title: "Infosys Springboard Virtual Internship",
-    role: "Cloud Reliability & Resilience Training",
-    period: "2024 - Present",
+    number: "01",
+    company: "Infosys Springboard",
+    role: "Java Developer",
+    period: "2025",
+    type: "Virtual Internship",
     description:
-      "Hands-on training in AWS basics, cloud reliability engineering, and system resilience practices.",
+      "Hands-on development experience with Java, Spring Boot, REST APIs, databases, and full-stack development.",
+    details: [
+      "Building and improving web applications using Java and Spring Boot.",
+      "Developing RESTful APIs and working with relational databases.",
+      "Applying software-development practices through practical project work.",
+      "Currently working on a Volunteer Management System.",
+    ],
     icon: Briefcase,
-    color: "text-emerald-400",
   },
   {
-    title: "Codetech IT Solution",
-    role: "Frontend Development Training",
-    period: "2024",
+    number: "02",
+    company: "GRRAS Solutions",
+    role: "Java Intern",
+    period: "2026",
+    type: "Internship",
     description:
-      "Comprehensive frontend training focusing on HTML, CSS, JavaScript, and React development best practices.",
+      "Working with Java, Spring Boot, REST APIs, databases, and full-stack development in a practical development environment.",
+    details: [
+      "Developing and improving web applications using Java and Spring Boot.",
+      "Working with REST APIs and backend application architecture.",
+      "Working with databases and integrating backend services.",
+      "Gaining practical experience with full-stack software development.",
+    ],
+    icon: Briefcase,
+  },
+  {
+    number: "03",
+    company: "Salesforce",
+    role: "Salesforce Developer",
+    period: "2025",
+    type: "Virtual Internship",
+    description:
+      "Hands-on learning and project-based experience with the Salesforce platform, CRM concepts, Apex, and Lightning development.",
+    details: [
+      "Working with Salesforce CRM concepts and platform fundamentals.",
+      "Learning and applying Apex for Salesforce development.",
+      "Exploring Lightning components and Salesforce development tools.",
+      "Building practical knowledge through hands-on and project-based learning.",
+    ],
+    icon: Briefcase,
+  },
+  {
+    number: "04",
+    company: "Arya College of Engineering & IT",
+    role: "B.Tech — Computer Science",
+    period: "2023 — 2027",
+    type: "Education",
+    description:
+      "Pursuing a Bachelor of Technology in Computer Science with a focus on programming, software development, and computer science fundamentals.",
+    details: [
+      "Current CGPA: 8.14",
+      "Building a strong foundation in programming and data structures.",
+      "Developing practical knowledge of software engineering concepts.",
+    ],
     icon: GraduationCap,
-    color: "text-blue-400",
-  },
-  {
-    title: "TechForce",
-    role: "Salesforce Training",
-    period: "2024",
-    description:
-      "CRM platform training with focus on Salesforce configuration, automation, and custom development.",
-    icon: GraduationCap,
-    color: "text-purple-400",
-  },
-  {
-    title: "Arya College of Engineering & IT",
-    role: "B.Tech Computer Science",
-    period: "2023 - 2027",
-    description:
-      "Pursuing B.Tech with CGPA 8.14. Strong foundation in programming, data structures, and software engineering.",
-    icon: GraduationCap,
-    color: "text-indigo-400",
-  },
-  {
-    title: "Achievements & Competitions",
-    role: "",
-    period: "",
-    description:
-      "SKIT Hackathon 2025 participant • Blind Coding Contest (EXERGIE’24)",
-    icon: Award,
-    color: "text-yellow-400",
   },
 ];
 
 const Experience = () => {
+  const sectionRef = useRef(null);
+  const [openIndex, setOpenIndex] = useState(0);
+
+  useLayoutEffect(() => {
+    const section = sectionRef.current;
+
+    if (!section) return;
+
+    const ctx = gsap.context(() => {
+      const reducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+
+      if (reducedMotion) {
+        gsap.set(
+          [
+            "[data-exp-label]",
+            "[data-exp-heading]",
+            "[data-exp-item]",
+          ],
+          {
+            opacity: 1,
+            y: 0,
+            x: 0,
+          }
+        );
+
+        return;
+      }
+
+      /* Section label */
+      gsap.fromTo(
+        "[data-exp-label]",
+        {
+          opacity: 0,
+          x: -20,
+        },
+        {
+          opacity: 1,
+          x: 0,
+          duration: 0.7,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: section,
+            start: "top 82%",
+            once: true,
+          },
+        }
+      );
+
+      /* Main heading */
+      gsap.fromTo(
+        "[data-exp-heading]",
+        {
+          opacity: 0,
+          y: 40,
+        },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.9,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: section,
+            start: "top 78%",
+            once: true,
+          },
+        }
+      );
+
+      /* Experience rows */
+      gsap.fromTo(
+        "[data-exp-item]",
+        {
+          opacity: 0,
+          y: 30,
+        },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.7,
+          stagger: 0.1,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: "[data-exp-list]",
+            start: "top 82%",
+            once: true,
+          },
+        }
+      );
+    }, section);
+
+    return () => ctx.revert();
+  }, []);
+
+  const toggleExperience = (index) => {
+    setOpenIndex((current) => (current === index ? -1 : index));
+  };
+
   return (
     <section
       id="experience"
-      className="py-32 bg-gradient-to-r from-slate-900 to-slate-800/50"
+      ref={sectionRef}
+      className="exp-section"
+      aria-labelledby="experience-heading"
     >
-      <div className="container mx-auto px-4 max-w-6xl">
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-24"
-        >
-          <h2 className="text-5xl md:text-6xl lg:text-7xl font-black bg-gradient-to-r from-orange-400 via-red-400 to-yellow-400 bg-clip-text text-transparent mb-6">
-            Experience
-          </h2>
-          <div className="w-32 h-1 bg-gradient-to-r from-orange-400 to-yellow-400 mx-auto rounded-full"></div>
-        </motion.div>
+      <div className="exp-top-rule" aria-hidden="true" />
 
-        {/* Timeline */}
-        <div className="relative max-w-4xl mx-auto">
-          {/* Vertical Line */}
-          <div className="hidden lg:block absolute left-10 top-0 h-full w-0.5 bg-gradient-to-b from-purple-400 to-pink-400"></div>
-          <div className="lg:hidden w-full h-0.5 bg-gradient-to-r from-purple-400 to-pink-400 mb-12"></div>
+      <div className="exp-container">
+        {/* ─────────────────────────────────────────────
+            HEADER
+        ───────────────────────────────────────────── */}
 
-          <div className="space-y-12">
-            {experiences.map((exp, index) => {
-              const Icon = exp.icon;
-              return (
-                <motion.div
-                  key={exp.title}
-                  initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  className="flex flex-col lg:flex-row items-center lg:items-start gap-8 lg:gap-12 group"
-                >
-                  {/* Timeline Dot & Icon */}
-                  <motion.div
-                    whileHover={{ scale: 1.2 }}
-                    className={cn(
-                      "flex flex-col lg:flex-row items-center lg:items-start z-10 w-24 h-24 lg:w-20 lg:h-20 rounded-2xl glass shadow-2xl shadow-purple-500/20 border-4 border-white/20 flex-shrink-0",
-                      index % 2 === 1 ? "lg:order-2 lg:ml-auto" : "lg:order-1",
-                    )}
-                  >
-                    <div
-                      className={`p-4 rounded-xl ${exp.color} bg-gradient-to-br from-white/20 shadow-lg`}
-                    >
-                      <Icon size={28} />
-                    </div>
-                  </motion.div>
+        <header className="exp-header">
+          <div
+            data-exp-label
+            className="exp-header-label"
+            aria-hidden="true"
+          >
+            <span className="exp-header-num">04</span>
 
-                  {/* Content */}
-                  <div
-                    className={cn(
-                      "glass p-8 rounded-3xl shadow-2xl shadow-black/20 flex-1 group-hover:shadow-purple-500/30 transition-all duration-500 w-full lg:max-w-2xl",
-                      index % 2 === 1 ? "lg:mr-auto" : "lg:ml-auto",
-                    )}
-                  >
-                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-4">
-                      <h3 className="text-2xl font-black text-white flex-1">
-                        {exp.title}
-                      </h3>
-                      {exp.role && (
-                        <span className="px-4 py-2 glass text-sm font-semibold text-white/80 rounded-xl border border-white/20">
-                          {exp.role}
-                        </span>
-                      )}
-                    </div>
-                    {exp.period && (
-                      <div className="flex items-center gap-3 text-white/60 mb-4">
-                        <Clock size={18} />
-                        <span>{exp.period}</span>
-                      </div>
-                    )}
-                    <p className="text-white/80 text-lg leading-relaxed mb-6">
-                      {exp.description}
-                    </p>
-                  </div>
-                </motion.div>
-              );
-            })}
+            <span className="exp-header-lbl">
+              Experience & Education
+            </span>
           </div>
+
+          <h2
+            id="experience-heading"
+            data-exp-heading
+            className="exp-main-heading"
+          >
+            EXPERIENCE
+            <br />
+            <span>&amp; EDUCATION</span>
+          </h2>
+        </header>
+
+        {/* ─────────────────────────────────────────────
+            EXPERIENCE LIST
+        ───────────────────────────────────────────── */}
+
+        <div
+          data-exp-list
+          className="exp-list"
+        >
+          {EXPERIENCES.map((experience, index) => {
+            const Icon = experience.icon;
+            const isOpen = openIndex === index;
+
+            return (
+              <article
+                key={experience.number}
+                data-exp-item
+                className={cn(
+                  "exp-item",
+                  isOpen && "exp-item-open"
+                )}
+              >
+                {/* Main row */}
+                <button
+                  type="button"
+                  className="exp-trigger"
+                  onClick={() => toggleExperience(index)}
+                  aria-expanded={isOpen}
+                  aria-controls={`experience-details-${index}`}
+                >
+                  {/* Number */}
+                  <span className="exp-number">
+                    {experience.number}
+                  </span>
+
+                  {/* Company */}
+                  <span className="exp-company">
+                    {experience.company}
+                  </span>
+
+                  {/* Role */}
+                  <span className="exp-role">
+                    {experience.role}
+                  </span>
+
+                  {/* Period */}
+                  <span className="exp-period">
+                    {experience.period}
+                  </span>
+
+                  {/* Arrow */}
+                  <span
+                    className="exp-arrow"
+                    aria-hidden="true"
+                  >
+                    <ChevronDown
+                      size={20}
+                      strokeWidth={1.4}
+                    />
+                  </span>
+                </button>
+
+                {/* Accordion content */}
+                <div
+                  id={`experience-details-${index}`}
+                  className="exp-details"
+                  hidden={!isOpen}
+                >
+                  <div className="exp-details-inner">
+                    {/* Icon */}
+                    <div
+                      className="exp-icon"
+                      aria-hidden="true"
+                    >
+                      <Icon
+                        size={20}
+                        strokeWidth={1.5}
+                      />
+                    </div>
+
+                    {/* Content */}
+                    <div className="exp-description">
+                      <div className="exp-meta">
+                        <span>{experience.type}</span>
+                        <span className="exp-meta-dot">•</span>
+                        <span>{experience.period}</span>
+                      </div>
+
+                      <p className="exp-summary">
+                        {experience.description}
+                      </p>
+
+                      <ul className="exp-details-list">
+                        {experience.details.map(
+                          (detail) => (
+                            <li key={detail}>
+                              {detail}
+                            </li>
+                          )
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+
+        {/* Bottom note */}
+        <div className="exp-footer-note">
+          <span className="exp-footer-line" />
+
+          <p>
+            Building practical experience across backend
+            development, full-stack applications, and
+            cloud-oriented technologies.
+          </p>
         </div>
       </div>
     </section>

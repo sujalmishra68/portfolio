@@ -1,5 +1,8 @@
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Lenis from "lenis";
+
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import About from "./components/About";
@@ -8,61 +11,130 @@ import Experience from "./components/Experience";
 import Skills from "./components/Skills";
 import Contact from "./components/Contact";
 import Footer from "./components/Footer";
-import { cn } from "./utils.js";
+
+gsap.registerPlugin(ScrollTrigger);
 
 function App() {
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const progressBarRef = useRef(null);
 
   useEffect(() => {
-    // Loading screen
-    const timer = setTimeout(() => setIsLoading(false), 2000);
-    return () => clearTimeout(timer);
-  }, []);
+    /*
+     * Respect prefers-reduced-motion.
+     * When reduced motion is requested, do not initialize Lenis.
+     */
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const totalHeight = document.body.scrollHeight - window.innerHeight;
-      const progress = (window.scrollY / totalHeight) * 100;
-      setScrollProgress(Math.min(progress, 100));
+    if (reduceMotion) {
+      ScrollTrigger.refresh();
+
+      return () => {
+        ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+      };
+    }
+
+    /*
+     * ------------------------------------------------------------
+     * LENIS
+     * ------------------------------------------------------------
+     * Single global Lenis instance.
+     */
+    const lenis = new Lenis({
+      duration: 1.1,
+      smoothWheel: true,
+      syncTouch: false,
+      autoRaf: false,
+    });
+
+    /*
+     * Keep GSAP ScrollTrigger synchronized with Lenis.
+     */
+    const handleLenisScroll = () => {
+      ScrollTrigger.update();
     };
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    lenis.on("scroll", handleLenisScroll);
+
+    /*
+     * GSAP ticker drives Lenis.
+     * GSAP ticker time is seconds.
+     * Lenis raf expects milliseconds.
+     */
+    const updateLenis = (time) => {
+      lenis.raf(time * 1000);
+    };
+
+    gsap.ticker.add(updateLenis);
+
+    /*
+     * Prevent GSAP ticker from accumulating large time jumps.
+     */
+    gsap.ticker.lagSmoothing(1000, 16);
+
+    /*
+     * ------------------------------------------------------------
+     * SCROLL PROGRESS
+     * ------------------------------------------------------------
+     * Update the progress bar directly instead of causing
+     * React re-renders on every scroll event.
+     */
+    const updateProgress = ({ progress }) => {
+      if (!progressBarRef.current) return;
+
+      const clampedProgress = Math.max(0, Math.min(progress, 1));
+
+      progressBarRef.current.style.transform = `scaleX(${clampedProgress})`;
+    };
+
+    lenis.on("scroll", updateProgress);
+
+    /*
+     * Initial state.
+     */
+    if (progressBarRef.current) {
+      progressBarRef.current.style.transform = "scaleX(0)";
+    }
+
+    /*
+     * Give ScrollTrigger time to calculate the final document
+     * after all sections/images have mounted.
+     */
+    const refreshTimer = window.setTimeout(() => {
+      ScrollTrigger.refresh();
+    }, 100);
+
+    /*
+     * ------------------------------------------------------------
+     * CLEANUP
+     * ------------------------------------------------------------
+     */
+    return () => {
+      window.clearTimeout(refreshTimer);
+
+      lenis.off("scroll", handleLenisScroll);
+      lenis.off("scroll", updateProgress);
+
+      gsap.ticker.remove(updateLenis);
+
+      lenis.destroy();
+
+      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+    };
   }, []);
 
-  if (isLoading) {
-    return (
-      <div className="fixed inset-0 bg-gradient-to-br from-black via-slate-900 to-purple-900 flex items-center justify-center z-50">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.5 }}
-          className="text-center"
-        >
-          <div className="w-24 h-24 border-4 border-white/20 border-t-white rounded-full mx-auto mb-8 animate-spin"></div>
-          <div className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-            Sujal Mishra
-          </div>
-          <p className="text-white/60 mt-4">Loading portfolio...</p>
-        </motion.div>
-      </div>
-    );
-  }
-
   return (
-    <div className="relative bg-gradient-to-b from-black via-slate-900 to-black overflow-x-hidden">
-      {/* Scroll Progress Bar */}
+    <div className="site-shell">
+      {/* Global scroll progress */}
       <div
-        className="fixed top-0 left-0 h-1 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 z-50 origin-left transition-all duration-300 shadow-lg"
-        style={{ width: `${scrollProgress}%` }}
+        ref={progressBarRef}
+        className="scroll-progress-bar"
+        aria-hidden="true"
       />
 
-      {/* Navbar */}
       <Navbar />
 
-      {/* Main Content */}
-      <main className="pt-0">
+      <main>
         <Hero />
         <About />
         <Projects />
@@ -71,31 +143,7 @@ function App() {
         <Contact />
       </main>
 
-      {/* Footer */}
       <Footer />
-
-      {/* Back to Top Button */}
-      <motion.button
-        initial={{ opacity: 0, scale: 0 }}
-        whileInView={{ opacity: 1, scale: 1 }}
-        className="fixed bottom-8 right-8 w-16 h-16 glass p-4 rounded-2xl shadow-2xl shadow-purple-500/20 hover:shadow-purple-500/40 border border-white/20 z-40 backdrop-blur-xl hover:bg-white/10 transition-all duration-300"
-        onClick={() =>
-          document
-            .getElementById("hero")
-            ?.scrollIntoView({ behavior: "smooth" })
-        }
-        whileHover={{ scale: 1.1, y: -5 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        ↑
-      </motion.button>
-
-      {/* Custom Cursor (optional - subtle) */}
-      <div
-        className="fixed w-4 h-4 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full pointer-events-none z-30 mix-blend-difference blur-sm opacity-70 -translate-x-2 -translate-y-2"
-        style={{ left: 0, top: 0 }}
-        id="cursor-dot"
-      />
     </div>
   );
 }

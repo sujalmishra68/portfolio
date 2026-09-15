@@ -1,138 +1,294 @@
-import { motion } from "framer-motion";
-import { Github, Linkedin, Menu, X, Mail } from "lucide-react";
-import { useState, useEffect } from "react";
-import { cn } from "../utils.js";
+import { useEffect, useRef, useState } from "react";
+import gsap from "gsap";
+import { Github, Linkedin, Menu, X } from "lucide-react";
+
+const NAV_ITEMS = [
+  { name: "Home", id: "hero" },
+  { name: "About", id: "about" },
+  { name: "Projects", id: "projects" },
+  { name: "Experience", id: "experience" },
+  { name: "Skills", id: "skills" },
+  { name: "Contact", id: "contact" },
+];
 
 const Navbar = () => {
+  const navRef = useRef(null);
+  const mobileMenuRef = useRef(null);
+
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  const scrollTo = (id) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  /*
+   * Smooth section navigation.
+   * Lenis, when initialized in App.jsx, will take over the
+   * scrolling behavior through the native scroll call.
+   */
+  const scrollToSection = (id) => {
+    const target = document.getElementById(id);
+
+    if (!target) return;
+
+    target.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+
     setIsOpen(false);
   };
 
+  /*
+   * Navbar scroll state
+   */
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      setScrolled(window.scrollY > 24);
     };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    handleScroll();
+
+    window.addEventListener("scroll", handleScroll, {
+      passive: true,
+    });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
-  const navItems = [
-    { name: "Home", id: "hero" },
-    { name: "About", id: "about" },
-    { name: "Projects", id: "projects" },
-    { name: "Experience", id: "experience" },
-    { name: "Skills", id: "skills" },
-    { name: "Contact", id: "contact" },
-  ];
+  /*
+   * Initial navbar entrance
+   */
+  useEffect(() => {
+    if (!navRef.current) return;
+
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    if (reducedMotion) {
+      gsap.set(navRef.current, {
+        opacity: 1,
+        y: 0,
+      });
+
+      return;
+    }
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        navRef.current,
+        {
+          opacity: 0,
+          y: -24,
+        },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.8,
+          delay: 0.15,
+          ease: "power3.out",
+        }
+      );
+    }, navRef);
+
+    return () => ctx.revert();
+  }, []);
+
+  /*
+   * Mobile menu animation
+   */
+  useEffect(() => {
+    if (!mobileMenuRef.current) return;
+
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    if (reducedMotion) {
+      gsap.set(mobileMenuRef.current, {
+        opacity: isOpen ? 1 : 0,
+        height: isOpen ? "auto" : 0,
+      });
+
+      return;
+    }
+
+    if (isOpen) {
+      gsap.fromTo(
+        mobileMenuRef.current,
+        {
+          opacity: 0,
+          height: 0,
+        },
+        {
+          opacity: 1,
+          height: "auto",
+          duration: 0.45,
+          ease: "power3.out",
+        }
+      );
+    } else {
+      gsap.to(mobileMenuRef.current, {
+        opacity: 0,
+        height: 0,
+        duration: 0.3,
+        ease: "power2.inOut",
+      });
+    }
+  }, [isOpen]);
+
+  /*
+   * Close mobile navigation when switching to desktop
+   */
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   return (
-    <motion.nav
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      className={cn(
-        "fixed top-0 left-0 right-0 z-50 backdrop-blur-xl transition-all duration-300",
-        scrolled ? "glass shadow-2xl shadow-purple-500/10" : "glass bg-white/5",
-      )}
+    <nav
+      ref={navRef}
+      className={`site-navbar ${scrolled ? "site-navbar-scrolled" : ""}`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-4 md:py-3">
-          {/* Logo */}
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"
-          >
-            Sujal  Kumar Mishra
-          </motion.div>
+      <div className="navbar-inner">
+        {/* ─────────────────────────────────────────────
+            LOGO
+        ───────────────────────────────────────────── */}
+        <button
+          type="button"
+          className="navbar-logo"
+          onClick={() => scrollToSection("hero")}
+          aria-label="Go to homepage"
+        >
+          <span className="navbar-logo-first">Sujal</span>
+          <span className="navbar-logo-last">Mishra</span>
+        </button>
 
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => (
-              <motion.button
+        {/* ─────────────────────────────────────────────
+            DESKTOP NAVIGATION
+        ───────────────────────────────────────────── */}
+        <div className="navbar-desktop">
+          <div className="navbar-links">
+            {NAV_ITEMS.map((item, index) => (
+              <button
                 key={item.id}
-                onClick={() => scrollTo(item.id)}
-                whileHover={{ scale: 1.1, y: -2 }}
-                className="text-lg font-medium text-white/90 hover:text-white transition-all duration-300 relative group"
+                type="button"
+                onClick={() => scrollToSection(item.id)}
+                className="navbar-link"
               >
-                {item.name}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-pink-400 group-hover:w-full transition-all duration-300"></span>
-              </motion.button>
+                <span className="navbar-link-number">
+                  0{index + 1}
+                </span>
+
+                <span className="navbar-link-text">
+                  {item.name}
+                </span>
+              </button>
             ))}
-            {/* Social */}
-            <div className="flex space-x-4 ml-4">
-              <motion.a
-                href="https://github.com/sujalmishra68"
-                target="_blank"
-                whileHover={{ scale: 1.2 }}
-                className="p-2 hover:text-purple-400"
-              >
-                <Github size={24} />
-              </motion.a>
-              <motion.a
-                href="https://www.linkedin.com/in/sujalkumarmishra/"
-                target="_blank"
-                whileHover={{ scale: 1.2 }}
-                className="p-2 hover:text-blue-400"
-              >
-                <Linkedin size={24} />
-              </motion.a>
-            </div>
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
-            <motion.button
-              onClick={() => setIsOpen(!isOpen)}
-              whileTap={{ scale: 0.95 }}
-              className="p-2 rounded-lg glass"
+          {/* Social links */}
+          <div className="navbar-socials">
+            <a
+              href="https://github.com/sujalmishra68"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="GitHub"
+              className="navbar-social"
             >
-              {isOpen ? <X size={24} /> : <Menu size={24} />}
-            </motion.button>
+              <Github size={17} strokeWidth={1.7} />
+            </a>
+
+            <a
+              href="https://www.linkedin.com/in/sujalkumarmishra/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="LinkedIn"
+              className="navbar-social"
+            >
+              <Linkedin size={17} strokeWidth={1.7} />
+            </a>
           </div>
         </div>
 
-        {/* Mobile Menu */}
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            className="md:hidden pb-4 border-t border-white/10"
-          >
-            {navItems.map((item) => (
-              <motion.button
-                key={item.id}
-                onClick={() => scrollTo(item.id)}
-                whileHover={{ scale: 1.05 }}
-                className="block w-full text-left py-3 px-4 text-lg font-medium text-white/90 hover:text-white hover:pl-4 transition-all"
-              >
-                {item.name}
-              </motion.button>
-            ))}
-            <div className="pt-4 pb-2 flex space-x-4 px-4">
-              <motion.a
-                href="https://github.com/sujalmishra68"
-                target="_blank"
-                whileHover={{ scale: 1.2 }}
-                className="p-2 hover:text-purple-400"
-              >
-                <Github size={20} />
-              </motion.a>
-              <motion.a
-                href="https://www.linkedin.com/in/sujalkumarmishra/"
-                target="_blank"
-                whileHover={{ scale: 1.2 }}
-                className="p-2 hover:text-blue-400"
-              >
-                <Linkedin size={20} />
-              </motion.a>
-            </div>
-          </motion.div>
-        )}
+        {/* ─────────────────────────────────────────────
+            MOBILE MENU BUTTON
+        ───────────────────────────────────────────── */}
+        <button
+          type="button"
+          className="navbar-menu-button"
+          onClick={() => setIsOpen((previous) => !previous)}
+          aria-label={isOpen ? "Close navigation" : "Open navigation"}
+          aria-expanded={isOpen}
+          aria-controls="mobile-navigation"
+        >
+          {isOpen ? (
+            <X size={21} strokeWidth={1.6} />
+          ) : (
+            <Menu size={21} strokeWidth={1.6} />
+          )}
+        </button>
       </div>
-    </motion.nav>
+
+      {/* ─────────────────────────────────────────────
+          MOBILE NAVIGATION
+      ───────────────────────────────────────────── */}
+      <div
+        id="mobile-navigation"
+        ref={mobileMenuRef}
+        className="navbar-mobile"
+        aria-hidden={!isOpen}
+      >
+        <div className="navbar-mobile-inner">
+          {NAV_ITEMS.map((item, index) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => scrollToSection(item.id)}
+              className="navbar-mobile-link"
+              tabIndex={isOpen ? 0 : -1}
+            >
+              <span className="navbar-mobile-number">
+                0{index + 1}
+              </span>
+
+              <span>{item.name}</span>
+            </button>
+          ))}
+
+          <div className="navbar-mobile-socials">
+            <a
+              href="https://github.com/sujalmishra68"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="GitHub"
+              tabIndex={isOpen ? 0 : -1}
+            >
+              <Github size={19} strokeWidth={1.6} />
+            </a>
+
+            <a
+              href="https://www.linkedin.com/in/sujalkumarmishra/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="LinkedIn"
+              tabIndex={isOpen ? 0 : -1}
+            >
+              <Linkedin size={19} strokeWidth={1.6} />
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
   );
 };
 
